@@ -3,6 +3,7 @@
 // found in the LICENSE file.
 
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 
@@ -83,6 +84,77 @@ void main() {
     expect(log.single, isMethodCall(
       'SystemChrome.setPreferredOrientations',
       arguments: <String>['DeviceOrientation.portraitUp'],
+    ));
+  });
+
+  test('getPreferredOrientations control test', () async {
+    final List<MethodCall> log = <MethodCall>[];
+
+    TestDefaultBinaryMessengerBinding.instance!.defaultBinaryMessenger.setMockMethodCallHandler(SystemChannels.platform, (MethodCall methodCall) async {
+      log.add(methodCall);
+      return null;
+    });
+
+    await SystemChrome.getPreferredOrientations();
+
+    expect(log, hasLength(1));
+    expect(log.single, isMethodCall(
+      'SystemChrome.getPreferredOrientations',
+      arguments: null,
+    ));
+  });
+
+  test('getPreferredOrientations can decode all values', () async {
+    final List<MethodCall> log = <MethodCall>[];
+
+    TestDefaultBinaryMessengerBinding.instance!.defaultBinaryMessenger.setMockMethodCallHandler(SystemChannels.platform, (MethodCall methodCall) async {
+      log.add(methodCall);
+      return DeviceOrientation.values.map((DeviceOrientation e) => e.toString());
+    });
+
+    List<DeviceOrientation>? orientations = await SystemChrome.getPreferredOrientations();
+
+    expect(listEquals(orientations, DeviceOrientation.values), true);
+    expect(log, hasLength(1));
+    expect(log.single, isMethodCall(
+      'SystemChrome.getPreferredOrientations',
+      arguments: null,
+    ));
+  });
+
+  test('getPreferredOrientations discards unknown values', () async {
+    final List<MethodCall> log = <MethodCall>[];
+
+    TestDefaultBinaryMessengerBinding.instance!.defaultBinaryMessenger.setMockMethodCallHandler(SystemChannels.platform, (MethodCall methodCall) async {
+      log.add(methodCall);
+      return <String>['foo', 'portraitUp'];
+    });
+
+    List<DeviceOrientation>? orientations = await SystemChrome.getPreferredOrientations();
+
+    expect(listEquals(orientations, [DeviceOrientation.portraitUp]), true);
+    expect(log, hasLength(1));
+    expect(log.single, isMethodCall(
+      'SystemChrome.getPreferredOrientations',
+      arguments: null,
+    ));
+  });
+
+  test('getPreferredOrientations returns null if platform sends only unknown values', () async {
+    final List<MethodCall> log = <MethodCall>[];
+
+    TestDefaultBinaryMessengerBinding.instance!.defaultBinaryMessenger.setMockMethodCallHandler(SystemChannels.platform, (MethodCall methodCall) async {
+      log.add(methodCall);
+      return <String>['foo'];
+    });
+
+    List<DeviceOrientation>? orientations = await SystemChrome.getPreferredOrientations();
+
+    expect(listEquals(orientations, DeviceOrientation.values), true);
+    expect(log, hasLength(1));
+    expect(log.single, isMethodCall(
+      'SystemChrome.getPreferredOrientations',
+      arguments: null,
     ));
   });
 

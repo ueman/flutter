@@ -385,6 +385,42 @@ class SystemChrome {
     );
   }
 
+  /// Returns the set of orientations the application interface can
+  /// be currently displayed in.
+  ///
+  /// An empty list indicates that either no orienations are set or that
+  /// this operation is not supported on the current platform.
+  static Future<List<DeviceOrientation>?> getPreferredOrientations() async {
+    final List<String>? orientationsAsStrings =
+        await SystemChannels.platform.invokeMethod<List<String>?>(
+      'SystemChrome.getPreferredOrientations',
+    );
+    final List<DeviceOrientation>? orientations = orientationsAsStrings
+        ?.map(_fromString)
+        .whereType<DeviceOrientation>()
+        .toList();
+
+    if(orientations != null && orientations.isEmpty) {
+      return null;
+    }
+    return orientations;
+  }
+
+  static DeviceOrientation? _fromString(String orientation) {
+    switch (orientation) {
+      case 'portraitUp':
+        return DeviceOrientation.portraitUp;
+      case 'landscapeLeft':
+        return DeviceOrientation.landscapeLeft;
+      case 'portraitDown':
+        return DeviceOrientation.portraitDown;
+      case 'landscapeRight':
+        return DeviceOrientation.landscapeRight;
+      default:
+        return null;
+    }
+  }
+
   /// Specifies the description of the current state of the application as it
   /// pertains to the application switcher (also known as "recent tasks").
   ///
